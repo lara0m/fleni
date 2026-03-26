@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard Donaciones - DonaSalud</title>
+  <!-- Tailwind CSS para los estilos (nos permite hacer un diseño moderno muy rápido) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+  <div id="app"></div>
+
+  <!-- Librerías de React -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Lucide Icons para los iconitos del diseño -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script type="text/jsx">
+    const { useState, useEffect } = React;
+
+    // 1. MOCK DATA (Datos de prueba)
+    // Así es como trabajas como Frontend mientras el Backend no está listo.
+    // Inventas los datos con la misma estructura que luego te mandará el backend.
+    const datosIniciales = [
+      { id: 'DON-004', nombre: 'Roberto Díaz', email: 'roberto.diaz@email.com', monto: 2500, fecha: '2026-03-19', metodo: 'Efectivo', estado: 'Pendiente' },
+      { id: 'DON-005', nombre: 'Ana Belén Torres', email: 'ana.torres@email.com', monto: 8000, fecha: '2026-03-18', metodo: 'Cheque', estado: 'Confirmada' },
+      { id: 'DON-006', nombre: 'Grupo Industrial MX', email: 'donaciones@gimx.com', monto: 100000, fecha: '2026-03-17', metodo: 'Transferencia', estado: 'Confirmada' },
+    ];
+
+    // --- COMPONENTES PEQUEÑOS ---
+
+    // Componente para la barra lateral (Sidebar)
+    function Sidebar() {
+      return (
+        <div class="w-64 bg-slate-900 text-white min-h-screen p-4 flex flex-col">
+          <div class="flex items-center gap-3 mb-8 p-2">
+            <div class="bg-cyan-500 p-2 rounded-lg text-white font-bold">DS</div>
+            <div>
+              <h2 class="font-bold text-lg">DonaSalud</h2>
+              <p class="text-xs text-slate-400">Panel de gestión</p>
+            </div>
+          </div>
+          <nav class="flex-1 space-y-2">
+            <a href="#" class="flex gap-3 bg-slate-800 p-3 rounded-lg text-cyan-400 font-medium">Dashboard</a>
+            <a href="#" class="flex gap-3 p-3 text-slate-400 hover:text-white transition">Donaciones</a>
+            <a href="#" class="flex gap-3 p-3 text-slate-400 hover:text-white transition">Donantes</a>
+            <a href="#" class="flex gap-3 p-3 text-slate-400 hover:text-white transition">Configuración</a>
+          </nav>
+          <div class="mt-auto flex items-center gap-3 p-2 border-t border-slate-700 pt-4">
+            <div class="bg-slate-700 p-2 rounded-full">AR</div>
+            <div class="text-sm border-r pr-2 border-slate-700">Admin<br/><span class="text-xs text-slate-400">admin@hospital.com</span></div>
+          </div>
+        </div>
+      );
+    }
+
+    // Componente para las tarjetas de resumen (Stats)
+    // Usamos "props" (parámetros) para reutilizar el mismo diseño 4 veces con distintos datos
+    function TarjetaResumen({ titulo, valor, subtitulo, claseIcono, colorFondo }) {
+      return (
+        <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4">
+          <div class={`p-4 rounded-xl ${colorFondo} text-xl font-bold`}>{claseIcono}</div>
+          <div>
+            <p class="text-gray-500 text-sm mb-1">{titulo}</p>
+            <h3 class="text-2xl font-bold text-gray-800">{valor}</h3>
+            <p class="text-xs text-gray-400 mt-1">{subtitulo}</p>
+          </div>
+        </div>
+      );
+    }
+
+    // --- COMPONENTE PRINCIPAL ---
+    
+    function App() {
+      // ESTADO: Aquí guardamos las donaciones. 
+      // Cuando el backend esté listo, llenaremos esto haciendo un `fetch("url-del-backend")`
+      const [donaciones, setDonaciones] = useState(datosIniciales);
+
+      // Cálculos matemáticos basados en el estado
+      const totalDonaciones = donaciones.reduce((sum, d) => sum + d.monto, 0);
+      const promedio = Math.round(totalDonaciones / donaciones.length) || 0;
+
+      // Esta funcion simula cuando entra una nueva donacion "en tiempo real" (o cuando el backend nos avisa)
+      const simularNuevaDonacion = () => {
+        const nueva = {
+          id: `DON-00${donaciones.length + 4}`,
+          nombre: 'Nuevo Donante Anónimo',
+          email: 'anonimo@email.com',
+          monto: 5000,
+          fecha: new Date().toISOString().split('T')[0],
+          metodo: 'Transferencia',
+          estado: 'Confirmada'
+        };
+        // Agregamos la nueva al principio de la lista
+        setDonaciones([nueva, ...donaciones]);
+      };
+
+      return (
+        <div class="flex bg-gray-50 min-h-screen">
+          <Sidebar />
+          
+          <main class="flex-1 p-8 overflow-y-auto">
+            <div class="flex justify-between items-end mb-8">
+              <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+                <p class="text-gray-500">Resumen de donaciones y actividad reciente</p>
+              </div>
+              <button 
+                onClick={simularNuevaDonacion}
+                class="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg transition shadow-md"
+              >
+                + Simular Ingreso (Actualización)
+              </button>
+            </div>
+
+            {/* GRILLLA DE TARJETAS */}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <TarjetaResumen 
+                titulo="Total Donaciones" 
+                valor={`$${totalDonaciones.toLocaleString()}`} 
+                subtitulo="+12.5%" 
+                claseIcono="$" 
+                colorFondo="bg-teal-50 text-teal-600" 
+              />
+              <TarjetaResumen 
+                titulo="Donantes Únicos" 
+                valor={donaciones.length} 
+                subtitulo="+3 este mes" 
+                claseIcono="👤" 
+                colorFondo="bg-cyan-50 text-cyan-600" 
+              />
+              <TarjetaResumen 
+                titulo="Promedio por Donación" 
+                valor={`$${promedio.toLocaleString()}`} 
+                subtitulo="+8.2%" 
+                claseIcono="📈" 
+                colorFondo="bg-green-50 text-green-600" 
+              />
+              <TarjetaResumen 
+                titulo="Donaciones este Mes" 
+                valor={donaciones.length} 
+                subtitulo="Marzo 2026" 
+                claseIcono="📅" 
+                colorFondo="bg-orange-50 text-orange-600" 
+              />
+            </div>
+
+            {/* TABLA DE REGISTROS */}
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+              <div class="flex justify-between items-center mb-6">
+                <h3 class="font-bold text-lg text-gray-800">Registro de Donaciones</h3>
+                <input 
+                  type="text" 
+                  placeholder="Buscar donante o ID..." 
+                  class="border border-gray-200 rounded-lg px-4 py-2 text-sm w-64 outline-none focus:border-cyan-500"
+                />
+              </div>
+
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="text-gray-400 font-medium border-b border-gray-100">
+                    <th class="pb-3 text-sm">ID</th>
+                    <th class="pb-3 text-sm">Donante</th>
+                    <th class="pb-3 text-sm">Monto</th>
+                    <th class="pb-3 text-sm">Fecha</th>
+                    <th class="pb-3 text-sm">Método</th>
+                    <th class="pb-3 text-sm">Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {donaciones.map((d) => (
+                    <tr key={d.id} class="border-b border-gray-50 hover:bg-gray-50 transition p-2">
+                      <td class="py-4 text-sm text-gray-500">{d.id}</td>
+                      <td class="py-4">
+                        <div class="font-bold text-gray-800">{d.nombre}</div>
+                        <div class="text-xs text-gray-400">{d.email}</div>
+                      </td>
+                      <td class="py-4 font-medium">${d.monto.toLocaleString()}</td>
+                      <td class="py-4 text-sm text-gray-500">{d.fecha}</td>
+                      <td class="py-4 text-sm text-gray-500">{d.metodo}</td>
+                      <td class="py-4">
+                        <span class={`px-3 py-1 rounded-full text-xs font-medium ${
+                          d.estado === 'Confirmada' ? 'bg-cyan-100 text-cyan-700' :
+                          d.estado === 'Pendiente' ? 'bg-gray-100 text-gray-600' : 
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          {d.estado}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+          </main>
+        </div>
+      );
+    }
+
+    const domNode = document.getElementById('app');
+    const root = ReactDOM.createRoot(domNode);
+    root.render(<App />);
+  </script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Donaciones - Personal Médico</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f7f6; }
+    .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    h1 { color: #2c3e50; text-align: center; }
+    .form-group { display: flex; gap: 10px; margin-bottom: 20px; }
+    input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; flex: 1; }
+    button { padding: 8px 16px; background-color: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background-color: #219150; }
+    .donation-list { list-style: none; padding: 0; }
+    .donation-item { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
+    .total { font-size: 1.2em; font-weight: bold; text-align: right; margin-top: 20px; color: #d35400; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <!-- Librerías de React -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <!-- Babel para leer JSX (código de HTML dentro de Javascript) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/jsx">
+    // Extraemos "useState" de React, es la herramienta para guardar variables que actualizan la pantalla
+    const { useState } = React;
+
+    function AplicacionDonaciones() {
+      // 1. EL ESTADO (VARIABLES)
+      // Guardamos la lista de donaciones (empieza vacía)
+      const [donaciones, setDonaciones] = useState([]);
+      
+      // Guardamos lo que el usuario escribe en los inputs
+      const [nombreEnTipeo, setNombreEnTipeo] = useState('');
+      const [montoEnTipeo, setMontoEnTipeo] = useState('');
+
+      // 2. FUNCIONES
+      // Esta función se ejecuta cuando hacemos clic en "Donar"
+      const manejarDonacion = () => {
+        // Validamos que se haya escrito algo
+        if (nombreEnTipeo.trim() === '' || montoEnTipeo <= 0) {
+          alert("Por favor, ingresa un nombre y un monto válido.");
+          return;
+        }
+
+        // Creamos una nueva donación
+        const nuevaDonacion = {
+          id: Date.now(), // Un ID único
+          nombre: nombreEnTipeo,
+          monto: parseFloat(montoEnTipeo) // Convertimos el texto a número
+        };
+
+        // Agregamos la nueva donación a la lista existente
+        // "..." significa: "traé todo lo que ya estaba antes en donaciones y sumale nuevaDonacion"
+        setDonaciones([...donaciones, nuevaDonacion]);
+
+        // Limpiamos los cajones de texto para la próxima persona
+        setNombreEnTipeo('');
+        setMontoEnTipeo('');
+      };
+
+      // Calculamos el dinero total recaudado sumando todos los montos de la lista
+      const totalRecaudado = donaciones.reduce((total, donacion) => total + donacion.monto, 0);
+
+      // 3. LA PANTALLA (LO QUE VE EL USUARIO)
+      return (
+        <div className="container">
+          <h1>Apoyo al Personal Médico 🏥</h1>
+          
+          <div className="form-group">
+            <input 
+              type="text" 
+              placeholder="Nombre del donante" 
+              value={nombreEnTipeo} // El cajón muestra lo que está en la variable
+              onChange={(e) => setNombreEnTipeo(e.target.value)} // Cuando el usuario escribe, guardamos el texto
+            />
+            <input 
+              type="number" 
+              placeholder="$ Monto" 
+              value={montoEnTipeo} 
+              onChange={(e) => setMontoEnTipeo(e.target.value)} 
+            />
+            <button onClick={manejarDonacion}>Hacer Donación</button>
+          </div>
+
+          <h3>Lista de Aportes:</h3>
+          {donaciones.length === 0 ? (
+            <p>Todavía no hay donaciones. ¡Sé el primero!</p>
+          ) : (
+            <ul className="donation-list">
+              {/* map() recorre la lista y dibuja un <li> por cada donación */}
+              {donaciones.map((donacion) => (
+                <li key={donacion.id} className="donation-item">
+                  <span><strong>{donacion.nombre}</strong> aportó:</span>
+                  <span>${donacion.monto.toFixed(2)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <div className="total">
+            Total recaudado: ${totalRecaudado.toFixed(2)}
+          </div>
+        </div>
+      );
+    }
+
+    // Le decimos a React que "dibuje" la Aplicación dentro de nuestro <div>
+    const domNode = document.getElementById('app');
+    const root = ReactDOM.createRoot(domNode);
+    root.render(<AplicacionDonaciones />);
+  </script>
+</body>
+</html>
